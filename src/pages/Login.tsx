@@ -2,13 +2,18 @@
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would handle authentication
@@ -18,42 +23,22 @@ const Login = () => {
   return (
     <div className="min-h-screen flex">
       <div className="w-full md:w-1/2 lg:w-2/5 xl:w-1/3 bg-dsfl-darkblue p-8 md:p-12 flex flex-col">
-        <div className="mb-8">
+        <div className={`mb-8 transition-all duration-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-dsfl-primary rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-dsfl-primary rounded-full flex items-center justify-center transition-transform hover:scale-110">
               <div className="w-8 h-8 bg-dsfl-darkblue rounded-full flex items-center justify-center">
                 <div className="w-5 h-5 bg-dsfl-primary rounded-md rotate-45"></div>
               </div>
             </div>
-            <div className="text-xl font-bold">
-              <span className="text-dsfl-primary">DSFL</span>
-            </div>
           </Link>
         </div>
         
-        <div className="mt-8">
+        <div className={`mt-8 transition-all duration-500 delay-100 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <h1 className="text-3xl font-bold mb-2">Login</h1>
-          <p className="text-gray-400">Don't have an account? <Link to="/signup" className="text-dsfl-primary">Get started</Link></p>
+          <p className="text-gray-400">Don't have an account? <Link to="/signup" className="text-dsfl-primary hover:underline">Get started</Link></p>
         </div>
         
-        <div className="mt-8">
-          <button className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-gray-800 border border-gray-700 rounded-md hover:bg-gray-700 transition-colors">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M8 12L16 12" />
-              <path d="M12 8L12 16" />
-            </svg>
-            Continue With Google
-          </button>
-        </div>
-        
-        <div className="my-6 flex items-center">
-          <div className="flex-grow h-px bg-gray-700"></div>
-          <span className="mx-4 text-gray-400 text-sm">OR</span>
-          <div className="flex-grow h-px bg-gray-700"></div>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
+        <form onSubmit={handleSubmit} className={`flex-1 flex flex-col mt-8 transition-all duration-500 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-1">Email address</label>
@@ -62,7 +47,7 @@ const Login = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-800 border-gray-700"
+                className="w-full bg-gray-800 border-gray-700 focus:border-dsfl-primary"
                 placeholder="student@doonschool.com"
                 required
               />
@@ -79,13 +64,13 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-800 border-gray-700"
+                  className="w-full bg-gray-800 border-gray-700 focus:border-dsfl-primary"
                   placeholder="••••••••"
                   required
                 />
                 <button 
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-dsfl-primary transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -104,8 +89,9 @@ const Login = () => {
             </div>
           </div>
           
-          <Button type="submit" className="mt-6 bg-dsfl-primary hover:bg-dsfl-secondary text-white">
-            Login
+          <Button type="submit" className="mt-6 bg-dsfl-primary hover:bg-dsfl-secondary text-white relative overflow-hidden group">
+            <span className="absolute inset-0 w-0 bg-gradient-to-r from-dsfl-secondary to-dsfl-primary group-hover:w-full transition-all duration-300 ease-out opacity-50"></span>
+            <span className="relative">Login</span>
           </Button>
         </form>
       </div>
