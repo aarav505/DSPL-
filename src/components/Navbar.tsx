@@ -1,10 +1,12 @@
 
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -46,13 +48,29 @@ const Navbar = () => {
         </div>
         
         <div className={`flex items-center space-x-3 transition-all duration-700 delay-200 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
-          <Link to="/login" className="text-white px-4 py-1 border border-gray-700 rounded-lg hover:border-dsfl-primary transition-all hover:bg-gray-800/30">
-            Login
-          </Link>
-          <Link to="/signup" className="dsfl-btn relative overflow-hidden group">
-            <span className="absolute inset-0 w-0 bg-dsfl-secondary group-hover:w-full transition-all duration-300 ease-out"></span>
-            <span className="relative">Sign Up</span>
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-gray-300 text-sm hidden md:block">
+                {user.email}
+              </span>
+              <button 
+                onClick={() => signOut()} 
+                className="text-white px-4 py-1 border border-gray-700 rounded-lg hover:border-dsfl-primary transition-all hover:bg-gray-800/30"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link to="/login" className="text-white px-4 py-1 border border-gray-700 rounded-lg hover:border-dsfl-primary transition-all hover:bg-gray-800/30">
+                Login
+              </Link>
+              <Link to="/signup" className="dsfl-btn relative overflow-hidden group">
+                <span className="absolute inset-0 w-0 bg-dsfl-secondary group-hover:w-full transition-all duration-300 ease-out"></span>
+                <span className="relative">Sign Up</span>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Eye, EyeOff, AlertCircle, Check } from "lucide-react";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -11,15 +13,63 @@ const SignUp = () => {
   const [house, setHouse] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordMessage, setPasswordMessage] = useState("");
+  
+  const { signUp } = useAuth();
   
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+  
+  useEffect(() => {
+    checkPasswordStrength(password);
+  }, [password]);
+  
+  const checkPasswordStrength = (pass: string) => {
+    if (!pass) {
+      setPasswordStrength(0);
+      setPasswordMessage("");
+      return;
+    }
+    
+    let strength = 0;
+    
+    // Length check
+    if (pass.length >= 8) strength += 1;
+    
+    // Character type checks
+    if (/[A-Z]/.test(pass)) strength += 1;
+    if (/[a-z]/.test(pass)) strength += 1;
+    if (/[0-9]/.test(pass)) strength += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) strength += 1;
+    
+    setPasswordStrength(strength);
+    
+    if (strength < 3) {
+      setPasswordMessage("Weak password");
+    } else if (strength < 5) {
+      setPasswordMessage("Medium password");
+    } else {
+      setPasswordMessage("Strong password");
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would handle user registration
-    console.log("Registration attempt with:", { name, email, house });
+    if (passwordStrength < 3) {
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await signUp(email, password, name, house);
+    } catch (error) {
+      console.error("Signup error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
@@ -94,7 +144,13 @@ const SignUp = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-800 border-gray-700 focus:border-dsfl-primary"
+                  className={`w-full bg-gray-800 border-gray-700 ${
+                    password && passwordStrength < 3 
+                      ? 'focus:border-red-500 border-red-700' 
+                      : password && passwordStrength >= 3 
+                        ? 'focus:border-green-500 border-green-700' 
+                        : 'focus:border-dsfl-primary'
+                  }`}
                   placeholder="••••••••"
                   required
                 />
@@ -103,26 +159,72 @@ const SignUp = () => {
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-dsfl-primary transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  )}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-400">Must be at least 8 characters with a number and special character</p>
+              
+              {password && (
+                <div className="mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-1 flex-1 bg-gray-700 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all ${
+                          passwordStrength < 3 
+                            ? 'bg-red-500' 
+                            : passwordStrength < 5 
+                              ? 'bg-yellow-500' 
+                              : 'bg-green-500'
+                        }`}
+                        style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span 
+                      className={`text-xs ${
+                        passwordStrength < 3 
+                          ? 'text-red-400' 
+                          : passwordStrength < 5 
+                            ? 'text-yellow-400' 
+                            : 'text-green-400'
+                      }`}
+                    >
+                      {passwordMessage}
+                    </span>
+                  </div>
+                  
+                  <div className="mt-2 grid grid-cols-1 gap-1">
+                    <PasswordRequirement 
+                      text="At least 8 characters" 
+                      isValid={password.length >= 8}
+                    />
+                    <PasswordRequirement 
+                      text="Contains uppercase letter" 
+                      isValid={/[A-Z]/.test(password)}
+                    />
+                    <PasswordRequirement 
+                      text="Contains lowercase letter" 
+                      isValid={/[a-z]/.test(password)}
+                    />
+                    <PasswordRequirement 
+                      text="Contains number" 
+                      isValid={/[0-9]/.test(password)}
+                    />
+                    <PasswordRequirement 
+                      text="Contains special character" 
+                      isValid={/[^A-Za-z0-9]/.test(password)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
-          <Button type="submit" className="mt-6 bg-dsfl-primary hover:bg-dsfl-secondary text-white relative overflow-hidden group">
+          <Button 
+            type="submit" 
+            className="mt-6 bg-dsfl-primary hover:bg-dsfl-secondary text-white relative overflow-hidden group"
+            disabled={isSubmitting || (password && passwordStrength < 3)}
+          >
             <span className="absolute inset-0 w-0 bg-gradient-to-r from-dsfl-secondary to-dsfl-primary group-hover:w-full transition-all duration-300 ease-out opacity-50"></span>
-            <span className="relative">Create Account</span>
+            <span className="relative">{isSubmitting ? 'Creating account...' : 'Create Account'}</span>
           </Button>
           
           <p className="mt-4 text-xs text-gray-400 text-center">
@@ -143,6 +245,21 @@ const SignUp = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+const PasswordRequirement = ({ text, isValid }: { text: string; isValid: boolean }) => {
+  return (
+    <div className="flex items-center gap-2">
+      {isValid ? (
+        <Check className="w-3 h-3 text-green-400" />
+      ) : (
+        <AlertCircle className="w-3 h-3 text-gray-400" />
+      )}
+      <span className={`text-xs ${isValid ? 'text-green-400' : 'text-gray-400'}`}>
+        {text}
+      </span>
     </div>
   );
 };
