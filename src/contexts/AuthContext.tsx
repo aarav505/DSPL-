@@ -70,9 +70,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: data.user.id,
             name,
             email,
-            house,
+            House: house,
             fantasy_points: 0,
-            budget: 100 // Starting budget, adjust as needed
+            budget: 100 // Starting budget in dascoin
           });
 
         if (profileError) {

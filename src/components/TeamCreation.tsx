@@ -1,7 +1,11 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 type Position = "GK" | "DEF" | "MID" | "FWD";
+
 type Player = {
   id: number;
   name: string;
@@ -15,9 +19,118 @@ const TeamCreation = () => {
   const [formation, setFormation] = useState("3-4-3");
   const [budget, setBudget] = useState(1000);
   const [points, setPoints] = useState(0);
-
-  // Simplified player data - in a real app, this would come from an API
   const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchPlayers();
+  }, []);
+
+  const fetchPlayers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('Players')
+        .select('*');
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        // Convert the data to our Player type and mark all as unselected initially
+        const formattedPlayers = data.map((player: any) => ({
+          ...player,
+          selected: false,
+        }));
+        
+        setPlayers(formattedPlayers);
+      }
+    } catch (error: any) {
+      console.error('Error fetching players:', error.message);
+      toast({
+        title: "Error",
+        description: "Failed to load players. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddPlayer = (player: Player) => {
+    if (selectedPlayers.length >= 11) {
+      toast({
+        title: "Team full",
+        description: "You can only select 11 players for your team",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if player fits in budget
+    if (player.price > budget) {
+      toast({
+        title: "Insufficient budget",
+        description: "You don't have enough budget to add this player",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedPlayers = players.map(p => 
+      p.id === player.id ? { ...p, selected: true } : p
+    );
+    setPlayers(updatedPlayers);
+    setSelectedPlayers([...selectedPlayers, player]);
+    setBudget(budget - player.price);
+  };
+
+  const handleRemovePlayer = (player: Player) => {
+    const updatedSelectedPlayers = selectedPlayers.filter(p => p.id !== player.id);
+    const updatedPlayers = players.map(p => 
+      p.id === player.id ? { ...p, selected: false } : p
+    );
+    setPlayers(updatedPlayers);
+    setSelectedPlayers(updatedSelectedPlayers);
+    setBudget(budget + player.price);
+  };
+
+  const handleSaveTeam = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to save your team",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedPlayers.length !== 11) {
+      toast({
+        title: "Team incomplete",
+        description: "You need to select exactly 11 players for your team",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Team saved",
+      description: "Your team has been saved successfully",
+    });
+  };
+
+  const filteredPlayers = searchTerm
+    ? players.filter(player => 
+        player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        player.team.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : players;
 
   return (
     <section className="py-10">
@@ -64,6 +177,38 @@ const TeamCreation = () => {
                   <option value="5-3-2">5-3-2</option>
                 </select>
               </div>
+            </div>
+
+            <div className="dsfl-card">
+              <h3 className="text-lg font-semibold mb-3">Selected Players ({selectedPlayers.length}/11)</h3>
+              {selectedPlayers.length > 0 ? (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                  {selectedPlayers.map(player => (
+                    <div key={player.id} className="flex justify-between items-center p-2 bg-gray-800 rounded-md">
+                      <div>
+                        <span className="font-semibold">{player.name}</span>
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                          <span>{player.position}</span>
+                          <span>•</span>
+                          <span>{player.team}</span>
+                          <span>•</span>
+                          <span>₹{player.price}</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleRemovePlayer(player)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-400 text-center py-4">
+                  No players selected yet
+                </div>
+              )}
             </div>
           </div>
           
@@ -124,7 +269,12 @@ const TeamCreation = () => {
           <div className="flex flex-col gap-4">
             <div className="dsfl-card">
               <h3 className="text-lg font-semibold mb-3">Captain</h3>
-              <button className="dsfl-btn w-full">Choose Captain</button>
+              <button 
+                className="dsfl-btn w-full"
+                disabled={selectedPlayers.length === 0}
+              >
+                Choose Captain
+              </button>
             </div>
             
             <div className="dsfl-card">
@@ -135,7 +285,13 @@ const TeamCreation = () => {
             </div>
             
             <div className="mt-auto dsfl-card">
-              <button className="dsfl-btn w-full">Save Team</button>
+              <button 
+                onClick={handleSaveTeam}
+                className="dsfl-btn w-full"
+                disabled={selectedPlayers.length === 0}
+              >
+                Save Team
+              </button>
             </div>
           </div>
         </div>
@@ -148,6 +304,8 @@ const TeamCreation = () => {
                 type="text" 
                 placeholder="Search players..." 
                 className="pl-8 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-dsfl-primary"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
               <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="absolute left-2.5 top-1/2 transform -translate-y-1/2">
                 <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -156,53 +314,58 @@ const TeamCreation = () => {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left border-b border-gray-800">
-                  <th className="p-2">Name</th>
-                  <th className="p-2">Position</th>
-                  <th className="p-2">Team</th>
-                  <th className="p-2">Price</th>
-                  <th className="p-2">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Sample player data - would come from API */}
-                <tr className="border-b border-gray-800 hover:bg-gray-800/50">
-                  <td className="p-2">Aryan Singh</td>
-                  <td className="p-2">FWD</td>
-                  <td className="p-2">Jaipur</td>
-                  <td className="p-2">₹120</td>
-                  <td className="p-2">
-                    <button className="px-3 py-1 bg-dsfl-primary text-black rounded text-xs font-bold">
-                      Add
-                    </button>
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-800 hover:bg-gray-800/50">
-                  <td className="p-2">Rahul Kapoor</td>
-                  <td className="p-2">MID</td>
-                  <td className="p-2">Hyderabad</td>
-                  <td className="p-2">₹90</td>
-                  <td className="p-2">
-                    <button className="px-3 py-1 bg-dsfl-primary text-black rounded text-xs font-bold">
-                      Add
-                    </button>
-                  </td>
-                </tr>
-                <tr className="border-b border-gray-800 hover:bg-gray-800/50">
-                  <td className="p-2">Vivaan Sharma</td>
-                  <td className="p-2">DEF</td>
-                  <td className="p-2">Kashmir</td>
-                  <td className="p-2">₹80</td>
-                  <td className="p-2">
-                    <button className="px-3 py-1 bg-dsfl-primary text-black rounded text-xs font-bold">
-                      Add
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dsfl-primary"></div>
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left border-b border-gray-800">
+                    <th className="p-2">Name</th>
+                    <th className="p-2">Position</th>
+                    <th className="p-2">Team</th>
+                    <th className="p-2">Price</th>
+                    <th className="p-2">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPlayers.length > 0 ? (
+                    filteredPlayers.map(player => (
+                      <tr key={player.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                        <td className="p-2">{player.name}</td>
+                        <td className="p-2">{player.position}</td>
+                        <td className="p-2">{player.team}</td>
+                        <td className="p-2">₹{player.price}</td>
+                        <td className="p-2">
+                          {player.selected ? (
+                            <button 
+                              onClick={() => handleRemovePlayer(player)}
+                              className="px-3 py-1 bg-red-500 text-white rounded text-xs font-bold"
+                            >
+                              Remove
+                            </button>
+                          ) : (
+                            <button 
+                              onClick={() => handleAddPlayer(player)}
+                              className="px-3 py-1 bg-dsfl-primary text-black rounded text-xs font-bold"
+                            >
+                              Add
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="text-center py-4 text-gray-400">
+                        {searchTerm ? "No players match your search" : "No players available"}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
       </div>
