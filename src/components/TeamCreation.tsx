@@ -3,6 +3,14 @@ import { useState, useEffect } from "react";
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type Position = "GK" | "DEF" | "MID" | "FWD";
 
@@ -41,6 +49,7 @@ const TeamCreation = () => {
       }
 
       if (data) {
+        console.log("Players data:", data);
         // Convert the data to our Player type and mark all as unselected initially
         const formattedPlayers = data.map((player: any) => ({
           ...player,
@@ -318,53 +327,49 @@ const TeamCreation = () => {
               <div className="flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dsfl-primary"></div>
               </div>
+            ) : filteredPlayers.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Position</TableHead>
+                    <TableHead>Team</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPlayers.map((player) => (
+                    <TableRow key={player.id}>
+                      <TableCell className="font-medium">{player.name}</TableCell>
+                      <TableCell>{player.position}</TableCell>
+                      <TableCell>{player.team}</TableCell>
+                      <TableCell>₹{player.price}</TableCell>
+                      <TableCell>
+                        {player.selected ? (
+                          <button 
+                            onClick={() => handleRemovePlayer(player)}
+                            className="px-3 py-1 bg-red-500 text-white rounded text-xs font-bold"
+                          >
+                            Remove
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleAddPlayer(player)}
+                            className="px-3 py-1 bg-dsfl-primary text-black rounded text-xs font-bold"
+                          >
+                            Add
+                          </button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : (
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left border-b border-gray-800">
-                    <th className="p-2">Name</th>
-                    <th className="p-2">Position</th>
-                    <th className="p-2">Team</th>
-                    <th className="p-2">Price</th>
-                    <th className="p-2">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPlayers.length > 0 ? (
-                    filteredPlayers.map(player => (
-                      <tr key={player.id} className="border-b border-gray-800 hover:bg-gray-800/50">
-                        <td className="p-2">{player.name}</td>
-                        <td className="p-2">{player.position}</td>
-                        <td className="p-2">{player.team}</td>
-                        <td className="p-2">₹{player.price}</td>
-                        <td className="p-2">
-                          {player.selected ? (
-                            <button 
-                              onClick={() => handleRemovePlayer(player)}
-                              className="px-3 py-1 bg-red-500 text-white rounded text-xs font-bold"
-                            >
-                              Remove
-                            </button>
-                          ) : (
-                            <button 
-                              onClick={() => handleAddPlayer(player)}
-                              className="px-3 py-1 bg-dsfl-primary text-black rounded text-xs font-bold"
-                            >
-                              Add
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5} className="text-center py-4 text-gray-400">
-                        {searchTerm ? "No players match your search" : "No players available"}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              <div className="text-center py-8 text-gray-400">
+                {searchTerm ? "No players match your search" : "No players available"}
+              </div>
             )}
           </div>
         </div>
