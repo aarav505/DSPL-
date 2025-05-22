@@ -42,8 +42,8 @@ export type Database = {
           created_at: string
           email: string | null
           fantasy_points: number | null
-          House: string | null
-          id: number
+          house: string | null
+          id: string
           name: string | null
           password: string | null
         }
@@ -52,8 +52,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           fantasy_points?: number | null
-          House?: string | null
-          id?: number
+          house?: string | null
+          id: string
           name?: string | null
           password?: string | null
         }
@@ -62,8 +62,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           fantasy_points?: number | null
-          House?: string | null
-          id?: number
+          house?: string | null
+          id?: string
           name?: string | null
           password?: string | null
         }
