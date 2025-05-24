@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,35 +33,57 @@ const TeamCreation = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchPlayers();
-  }, []);
+    if (user) {
+      fetchPlayersAndUserTeam();
+    }
+  }, [user]);
 
-  const fetchPlayers = async () => {
+  const fetchPlayersAndUserTeam = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch all players
+      const { data: playersData, error: playersError } = await supabase
         .from('Players')
         .select('*');
 
-      if (error) {
-        throw error;
+      if (playersError) {
+        throw playersError;
       }
 
-      if (data) {
-        console.log("Players data:", data);
-        // Convert the data to our Player type and mark all as unselected initially
-        const formattedPlayers = data.map((player: any) => ({
+      // Fetch user's current team
+      const { data: userTeamData, error: teamError } = await supabase
+        .from('user_teams')
+        .select('player_id')
+        .eq('user_id', user?.id);
+
+      if (teamError) {
+        console.error('Error fetching user team:', teamError);
+      }
+
+      const userPlayerIds = userTeamData?.map(team => team.player_id) || [];
+
+      if (playersData) {
+        console.log("Players data:", playersData);
+        const formattedPlayers = playersData.map((player: any) => ({
           ...player,
-          selected: false,
+          selected: userPlayerIds.includes(player.id),
         }));
         
         setPlayers(formattedPlayers);
+        
+        // Set selected players and calculate budget
+        const selectedPlayersData = formattedPlayers.filter((p: Player) => p.selected);
+        setSelectedPlayers(selectedPlayersData);
+        
+        const totalCost = selectedPlayersData.reduce((sum: number, player: Player) => sum + player.price, 0);
+        setBudget(1000 - totalCost);
       }
     } catch (error: any) {
-      console.error('Error fetching players:', error.message);
+      console.error('Error fetching data:', error.message);
       toast({
         title: "Error",
-        description: "Failed to load players. Please try again later.",
+        description: "Failed to load data. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -70,7 +91,54 @@ const TeamCreation = () => {
     }
   };
 
-  const handleAddPlayer = (player: Player) => {
+  const savePlayerToTeam = async (playerId: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_teams')
+        .insert({
+          user_id: user.id,
+          player_id: playerId
+        });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('Error saving player to team:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save player to team",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const removePlayerFromTeam = async (playerId: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('user_teams')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('player_id', playerId);
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      console.error('Error removing player from team:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove player from team",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddPlayer = async (player: Player) => {
     if (selectedPlayers.length >= 11) {
       toast({
         title: "Team full",
@@ -80,7 +148,6 @@ const TeamCreation = () => {
       return;
     }
 
-    // Check if player fits in budget
     if (player.price > budget) {
       toast({
         title: "Insufficient budget",
@@ -90,15 +157,28 @@ const TeamCreation = () => {
       return;
     }
 
+    // Save to database
+    await savePlayerToTeam(player.id);
+
+    // Update local state
     const updatedPlayers = players.map(p => 
       p.id === player.id ? { ...p, selected: true } : p
     );
     setPlayers(updatedPlayers);
     setSelectedPlayers([...selectedPlayers, player]);
     setBudget(budget - player.price);
+
+    toast({
+      title: "Player added",
+      description: `${player.name} has been added to your team`,
+    });
   };
 
-  const handleRemovePlayer = (player: Player) => {
+  const handleRemovePlayer = async (player: Player) => {
+    // Remove from database
+    await removePlayerFromTeam(player.id);
+
+    // Update local state
     const updatedSelectedPlayers = selectedPlayers.filter(p => p.id !== player.id);
     const updatedPlayers = players.map(p => 
       p.id === player.id ? { ...p, selected: false } : p
@@ -106,6 +186,11 @@ const TeamCreation = () => {
     setPlayers(updatedPlayers);
     setSelectedPlayers(updatedSelectedPlayers);
     setBudget(budget + player.price);
+
+    toast({
+      title: "Player removed",
+      description: `${player.name} has been removed from your team`,
+    });
   };
 
   const handleSaveTeam = async () => {

@@ -2,10 +2,12 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from '@/lib/supabase';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [userName, setUserName] = useState<string>("");
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -24,6 +26,33 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('Users')
+            .select('name')
+            .eq('id', user.id)
+            .single();
+
+          if (error) {
+            console.error('Error fetching user name:', error);
+            return;
+          }
+
+          if (data?.name) {
+            setUserName(data.name);
+          }
+        } catch (error) {
+          console.error('Error fetching user name:', error);
+        }
+      }
+    };
+
+    fetchUserName();
+  }, [user]);
 
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-dsfl-darkblue/90 backdrop-blur-md shadow-lg' : 'bg-transparent'}`}>
@@ -51,7 +80,7 @@ const Navbar = () => {
           {user ? (
             <div className="flex items-center gap-3">
               <span className="text-gray-300 text-sm hidden md:block">
-                {user.email}
+                Hi, {userName || 'User'}
               </span>
               <button 
                 onClick={() => signOut()} 
