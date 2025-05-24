@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,12 +43,13 @@ const TeamCreation = () => {
     try {
       setLoading(true);
       
-      // Fetch all players
+      // Fetch all players using correct table name
       const { data: playersData, error: playersError } = await supabase
         .from('Players')
         .select('*');
 
       if (playersError) {
+        console.error('Error fetching players:', playersError);
         throw playersError;
       }
 

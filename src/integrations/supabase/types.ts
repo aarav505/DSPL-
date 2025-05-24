@@ -36,6 +36,35 @@ export type Database = {
         }
         Relationships: []
       }
+      user_teams: {
+        Row: {
+          created_at: string | null
+          id: string
+          player_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          player_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          player_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_teams_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "Players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Users: {
         Row: {
           budget: number | null

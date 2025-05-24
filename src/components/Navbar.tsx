@@ -31,22 +31,33 @@ const Navbar = () => {
     const fetchUserName = async () => {
       if (user) {
         try {
+          // First try to get name from Users table
           const { data, error } = await supabase
             .from('Users')
             .select('name')
             .eq('id', user.id)
-            .single();
+            .maybeSingle();
 
-          if (error) {
+          if (error && error.code !== 'PGRST116') {
             console.error('Error fetching user name:', error);
-            return;
           }
 
           if (data?.name) {
             setUserName(data.name);
+          } else {
+            // Fallback to user metadata if no name in Users table
+            const metaName = user.user_metadata?.name;
+            if (metaName) {
+              setUserName(metaName);
+            } else {
+              setUserName('User');
+            }
           }
         } catch (error) {
           console.error('Error fetching user name:', error);
+          // Fallback to user metadata
+          const metaName = user.user_metadata?.name;
+          setUserName(metaName || 'User');
         }
       }
     };
@@ -80,7 +91,7 @@ const Navbar = () => {
           {user ? (
             <div className="flex items-center gap-3">
               <span className="text-gray-300 text-sm hidden md:block">
-                Hi, {userName || 'User'}
+                Hi, {userName}
               </span>
               <button 
                 onClick={() => signOut()} 
