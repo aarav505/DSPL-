@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 type Position = "GK" | "DEF" | "MID" | "FWD";
@@ -41,7 +42,7 @@ const TeamField = ({ formation, selectedPlayers, captain, onRemovePlayer, onSetC
   const PlayerSlot = ({ position, index, player }: { position: Position; index: number; player?: Player }) => (
     <div className="relative">
       <div 
-        className={`w-16 h-16 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-200 ${
+        className={`w-20 h-20 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold cursor-pointer transition-all duration-200 ${
           player 
             ? `bg-dsfl-primary text-black hover:scale-110 ${captain?.id === player.id ? 'ring-4 ring-yellow-400' : ''}` 
             : 'bg-gray-600/50 text-gray-300'
@@ -52,8 +53,10 @@ const TeamField = ({ formation, selectedPlayers, captain, onRemovePlayer, onSetC
       >
         {player ? (
           <>
-            {captain?.id === player.id && <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full text-black text-xs flex items-center justify-center">C</div>}
-            <span className="truncate px-1">{player.name ? player.name.split(' ')[0] : 'Player'}</span>
+            {captain?.id === player.id && <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full text-black text-xs flex items-center justify-center font-bold">C</div>}
+            <span className="truncate px-1 text-center leading-tight">
+              {player.name ? player.name.split(' ')[0] : 'Player'}
+            </span>
           </>
         ) : (
           position
@@ -61,7 +64,7 @@ const TeamField = ({ formation, selectedPlayers, captain, onRemovePlayer, onSetC
       </div>
       
       {hoveredPlayer?.id === player?.id && player && (
-        <div className="absolute top-18 left-1/2 transform -translate-x-1/2 z-10 bg-black/90 text-white p-3 rounded-md text-sm whitespace-nowrap">
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-10 bg-black/90 text-white p-3 rounded-md text-sm whitespace-nowrap min-w-max">
           <div className="font-bold">{player.name}</div>
           <div>Position: {player.position}</div>
           <div>Team: {player.team}</div>
@@ -82,7 +85,7 @@ const TeamField = ({ formation, selectedPlayers, captain, onRemovePlayer, onSetC
   );
 
   return (
-    <div className="w-full aspect-[4/5] bg-gradient-to-b from-dsfl-field to-dsfl-fieldDark rounded-xl overflow-hidden relative border border-gray-700">
+    <div className="w-full aspect-[4/6] bg-gradient-to-b from-dsfl-field to-dsfl-fieldDark rounded-xl overflow-hidden relative border border-gray-700">
       {/* Field markings */}
       <div className="absolute inset-0">
         <div className="absolute left-1/2 top-0 bottom-0 w-[1px] bg-white/20 transform -translate-x-1/2"></div>

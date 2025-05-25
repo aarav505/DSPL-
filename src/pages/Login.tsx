@@ -113,7 +113,7 @@ const Login = () => {
           </div>
         </div>
         
-        {/* Add the new uploaded football field image */}
+        {/* Add the uploaded image */}
         <div className="absolute bottom-8 right-8">
           <img 
             src="/lovable-uploads/422b5e9b-8ab5-4edf-944b-9faa268ebc9a.png" 

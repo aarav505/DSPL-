@@ -24,6 +24,23 @@ type Player = {
   house?: string;
 };
 
+// Function to map database positions to our TypeScript types
+const mapPosition = (dbPosition: string): Position => {
+  switch (dbPosition) {
+    case 'Goalkeeper':
+      return 'GK';
+    case 'Defender':
+      return 'DEF';
+    case 'Midfielder':
+      return 'MID';
+    case 'Forward':
+      return 'FWD';
+    default:
+      console.warn(`Unknown position: ${dbPosition}, defaulting to MID`);
+      return 'MID';
+  }
+};
+
 const TeamCreation = () => {
   const [formation, setFormation] = useState("4-3-3");
   const [budget, setBudget] = useState(1000);
@@ -69,6 +86,7 @@ const TeamCreation = () => {
         console.log("Players data:", playersData);
         const formattedPlayers = playersData.map((player: any) => ({
           ...player,
+          position: mapPosition(player.position), // Map the position here
           selected: userPlayerIds.includes(player.id),
         }));
         
