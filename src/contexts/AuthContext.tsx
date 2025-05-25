@@ -58,6 +58,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name: name
+          }
+        }
       });
 
       if (error) throw error;
@@ -72,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email,
             House: house,
             fantasy_points: 0,
-            budget: 100 // Starting budget in dascoin
+            budget: 1000 // Starting budget in dascoin
           });
 
         if (profileError) {

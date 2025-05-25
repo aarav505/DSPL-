@@ -102,8 +102,8 @@ const Login = () => {
         </form>
       </div>
       
-      <div className="hidden md:block md:w-1/2 lg:w-3/5 xl:w-2/3 bg-center bg-cover" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1576138089064-2ca6efb8fdba?q=80&w=1974&auto=format&fit=crop')" }}>
-        <div className="h-full w-full bg-gradient-to-r from-dsfl-dark/90 to-transparent flex items-center justify-center">
+      <div className="hidden md:block md:w-1/2 lg:w-3/5 xl:w-2/3 bg-center bg-cover relative" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1576138089064-2ca6efb8fdba?q=80&w=1974&auto=format&fit=crop')" }}>
+        <div className="absolute inset-0 bg-gradient-to-r from-dsfl-dark/90 to-transparent flex items-center justify-center">
           <div className="p-12 max-w-lg">
             <h2 className="text-4xl font-bold mb-4">Let the Games Begin.</h2>
             <div className="flex mt-6 space-x-2">
@@ -111,6 +111,15 @@ const Login = () => {
               <div className="w-2 h-2 rounded-full bg-gray-600"></div>
             </div>
           </div>
+        </div>
+        
+        {/* Add the uploaded image */}
+        <div className="absolute bottom-8 right-8">
+          <img 
+            src="https://github.com/user-attachments/assets/6d5ef54e-fa10-48b2-96e2-7b1ec7e21b1e" 
+            alt="Login illustration" 
+            className="w-48 h-auto rounded-lg shadow-lg opacity-80"
+          />
         </div>
       </div>
     </div>
