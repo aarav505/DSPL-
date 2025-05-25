@@ -113,12 +113,12 @@ const Login = () => {
           </div>
         </div>
         
-        {/* Add the uploaded image */}
+        {/* Add the new uploaded football field image */}
         <div className="absolute bottom-8 right-8">
           <img 
-            src="https://github.com/user-attachments/assets/6d5ef54e-fa10-48b2-96e2-7b1ec7e21b1e" 
-            alt="Login illustration" 
-            className="w-48 h-auto rounded-lg shadow-lg opacity-80"
+            src="/lovable-uploads/422b5e9b-8ab5-4edf-944b-9faa268ebc9a.png" 
+            alt="Football field practice" 
+            className="w-64 h-auto rounded-lg shadow-lg opacity-90"
           />
         </div>
       </div>
