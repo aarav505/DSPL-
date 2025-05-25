@@ -25,13 +25,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    const setData = async () => {
+    console.log('Setting up auth state listener...');
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Use setTimeout to prevent potential deadlock
+          setTimeout(() => {
+            fetchUserProfile(session.user.id);
+          }, 0);
+        } else {
+          setUserProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Get initial session
+    const getInitialSession = async () => {
+      console.log('Getting initial session...');
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
         console.error('Error getting session:', error);
+        setLoading(false);
         return;
       }
       
+      console.log('Initial session:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -42,22 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setUserProfile(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
-    setData();
+    getInitialSession();
 
     return () => {
       subscription.unsubscribe();
@@ -66,6 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching user profile for:', userId);
       const { data, error } = await supabase
         .from('Users')
         .select('*')
@@ -80,6 +91,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data) {
         setUserProfile(data);
         console.log('User profile loaded:', data);
+      } else {
+        console.log('No user profile found for user:', userId);
       }
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);

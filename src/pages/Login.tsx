@@ -102,7 +102,15 @@ const Login = () => {
         </form>
       </div>
       
-      <div className="hidden md:block md:w-1/2 lg:w-3/5 xl:w-2/3 bg-center bg-cover relative" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1576138089064-2ca6efb8fdba?q=80&w=1974&auto=format&fit=crop')" }}>
+      <div className="hidden md:block md:w-1/2 lg:w-3/5 xl:w-2/3 relative overflow-hidden">
+        {/* Full cover background image */}
+        <img 
+          src="/lovable-uploads/422b5e9b-8ab5-4edf-944b-9faa268ebc9a.png" 
+          alt="Football field practice" 
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        
+        {/* Overlay content */}
         <div className="absolute inset-0 bg-gradient-to-r from-dsfl-dark/90 to-transparent flex items-center justify-center">
           <div className="p-12 max-w-lg">
             <h2 className="text-4xl font-bold mb-4">Let the Games Begin.</h2>
@@ -111,15 +119,6 @@ const Login = () => {
               <div className="w-2 h-2 rounded-full bg-gray-600"></div>
             </div>
           </div>
-        </div>
-        
-        {/* Add the uploaded image */}
-        <div className="absolute bottom-8 right-8">
-          <img 
-            src="/lovable-uploads/422b5e9b-8ab5-4edf-944b-9faa268ebc9a.png" 
-            alt="Football field practice" 
-            className="w-64 h-auto rounded-lg shadow-lg opacity-90"
-          />
         </div>
       </div>
     </div>
