@@ -1,10 +1,10 @@
-
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, AlertCircle, Check } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const SignUp = () => {
   const [name, setName] = useState("");
@@ -13,11 +13,10 @@ const SignUp = () => {
   const [house, setHouse] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMessage, setPasswordMessage] = useState("");
   
-  const { signUp } = useAuth();
+  const { signUp, loading } = useAuth();
   
   useEffect(() => {
     setIsLoaded(true);
@@ -59,17 +58,15 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passwordStrength < 3) {
+      toast({
+        title: "Weak password",
+        description: "Please choose a stronger password.",
+        variant: "destructive",
+      });
       return;
     }
     
-    setIsSubmitting(true);
-    try {
-      await signUp(email, password, name, house);
-    } catch (error) {
-      console.error("Signup error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await signUp(email, password, name, house);
   };
   
   return (
@@ -93,14 +90,14 @@ const SignUp = () => {
         <form onSubmit={handleSubmit} className={`flex-1 flex flex-col mt-8 transition-all duration-500 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-400 mb-1">First Name</label>
               <Input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-gray-800 border-gray-700 focus:border-dsfl-primary"
-                placeholder="John Doe"
+                placeholder="John"
                 required
               />
             </div>
@@ -221,10 +218,10 @@ const SignUp = () => {
           <Button 
             type="submit" 
             className="mt-6 bg-dsfl-primary hover:bg-dsfl-secondary text-white relative overflow-hidden group"
-            disabled={isSubmitting || (password && passwordStrength < 3)}
+            disabled={loading}
           >
             <span className="absolute inset-0 w-0 bg-gradient-to-r from-dsfl-secondary to-dsfl-primary group-hover:w-full transition-all duration-300 ease-out opacity-50"></span>
-            <span className="relative">{isSubmitting ? 'Creating account...' : 'Create Account'}</span>
+            <span className="relative">{loading ? 'Creating account...' : 'Create Account'}</span>
           </Button>
           
           <p className="mt-4 text-xs text-gray-400 text-center">

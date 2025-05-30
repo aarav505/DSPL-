@@ -11,10 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { authService } from '@/lib/auth';
 
 type Position = "GK" | "DEF" | "MID" | "FWD";
 
-type Player = {
+interface Player {
   id: number;
   name: string;
   position: Position;
@@ -22,7 +23,8 @@ type Player = {
   team: string;
   selected: boolean;
   house?: string;
-};
+  isCaptain?: boolean;
+}
 
 // Function to map database positions to our TypeScript types
 const mapPosition = (dbPosition: string): Position => {
@@ -50,7 +52,7 @@ const TeamCreation = () => {
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [captain, setCaptain] = useState<Player | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -265,16 +267,19 @@ const TeamCreation = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('Users')
-        .update({ budget: newBudget })
-        .eq('id', user.id);
-
-      if (error) {
-        throw error;
+      const success = await authService.updateUserProfile(user.id, { budget: newBudget });
+      if (success) {
+        await refreshUserProfile();
+      } else {
+        throw new Error('Failed to update budget');
       }
     } catch (error: any) {
       console.error('Error updating user budget:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update budget. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -292,6 +297,15 @@ const TeamCreation = () => {
       toast({
         title: "Team incomplete",
         description: "You need to select exactly 11 players for your team",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!captain) {
+      toast({
+        title: "Captain not set",
+        description: "Please select a captain for your team",
         variant: "destructive",
       });
       return;
@@ -316,10 +330,64 @@ const TeamCreation = () => {
       }
     }
 
-    toast({
-      title: "Team saved",
-      description: "Your team has been saved successfully",
-    });
+    try {
+      // Start a transaction
+      const { error: teamError } = await supabase
+        .from('user_teams')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (teamError) {
+        console.error('Error deleting existing team:', teamError);
+        throw new Error('Failed to clear existing team');
+      }
+
+      // Insert new team
+      const teamInserts = selectedPlayers.map(player => ({
+        user_id: user.id,
+        player_id: player.id,
+        is_captain: player.id === captain.id
+      }));
+
+      const { error: insertError } = await supabase
+        .from('user_teams')
+        .insert(teamInserts);
+
+      if (insertError) {
+        console.error('Error inserting new team:', insertError);
+        throw new Error('Failed to save new team');
+      }
+
+      // Update user profile with team status
+      const { error: updateError } = await supabase
+        .from('Users')
+        .update({
+          team_created: true,
+          last_team_update: new Date().toISOString(),
+          captain_id: captain.id
+        })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error('Error updating user profile:', updateError);
+        throw new Error('Failed to update user profile');
+      }
+
+      toast({
+        title: "Team saved successfully",
+        description: "Your team has been saved and is ready for the competition!",
+      });
+
+      // Refresh the user profile to get updated data
+      await refreshUserProfile();
+    } catch (error: any) {
+      console.error('Error saving team:', error);
+      toast({
+        title: "Error saving team",
+        description: error.message || "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredPlayers = searchTerm

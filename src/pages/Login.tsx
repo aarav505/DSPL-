@@ -1,37 +1,29 @@
-
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const { signIn } = useAuth();
-  
+
+  const { signIn, loading } = useAuth(); // Get loading state from AuthContext
+
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      await signIn(email, password);
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    // The loading state is managed by AuthContext
+    await signIn(email, password);
   };
-  
+
   return (
     <div className="min-h-screen flex">
       <div className="w-full md:w-1/2 lg:w-2/5 xl:w-1/3 bg-dsfl-darkblue p-8 md:p-12 flex flex-col">
@@ -47,7 +39,7 @@ const Login = () => {
         
         <div className={`mt-8 transition-all duration-500 delay-100 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <h1 className="text-3xl font-bold mb-2">Login</h1>
-          <p className="text-gray-400">Don't have an account? <Link to="/signup" className="text-dsfl-primary hover:underline">Get started</Link></p>
+          <p className="text-gray-400">Don't have an account yet? <Link to="/signup" className="text-dsfl-primary hover:underline">Sign Up</Link></p>
         </div>
         
         <form onSubmit={handleSubmit} className={`flex-1 flex flex-col mt-8 transition-all duration-500 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
@@ -66,10 +58,7 @@ const Login = () => {
             </div>
             
             <div>
-              <div className="flex justify-between mb-1">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-400">Password</label>
-                <Link to="#" className="text-sm text-dsfl-primary hover:underline">Forgot password?</Link>
-              </div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-400 mb-1">Password</label>
               <div className="relative">
                 <Input
                   id="password"
@@ -94,26 +83,22 @@ const Login = () => {
           <Button 
             type="submit" 
             className="mt-6 bg-dsfl-primary hover:bg-dsfl-secondary text-white relative overflow-hidden group"
-            disabled={isSubmitting}
+            disabled={loading}
           >
             <span className="absolute inset-0 w-0 bg-gradient-to-r from-dsfl-secondary to-dsfl-primary group-hover:w-full transition-all duration-300 ease-out opacity-50"></span>
-            <span className="relative">{isSubmitting ? 'Logging in...' : 'Login'}</span>
+            <span className="relative">{loading ? 'Logging in...' : 'Login'}</span>
           </Button>
+          <p className="mt-4 text-xs text-gray-400 text-center">
+            <Link to="#" className="text-dsfl-primary hover:underline">Forgot your password?</Link>
+          </p>
         </form>
       </div>
-      
-      <div className="hidden md:block md:w-1/2 lg:w-3/5 xl:w-2/3 relative overflow-hidden">
-        {/* Full cover background image */}
-        <img 
-          src="/lovable-uploads/422b5e9b-8ab5-4edf-944b-9faa268ebc9a.png" 
-          alt="Football field practice" 
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        
-        {/* Overlay content */}
-        <div className="absolute inset-0 bg-gradient-to-r from-dsfl-dark/90 to-transparent flex items-center justify-center">
+
+      <div className="hidden md:block md:w-1/2 lg:w-3/5 xl:w-2/3 bg-center bg-cover" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1554406473-1196733b0b1e?q=80&w=1978&auto=format&fit=crop')" }}>
+        <div className="h-full w-full bg-gradient-to-r from-dsfl-dark/90 to-transparent flex items-center justify-center">
           <div className="p-12 max-w-lg">
-            <h2 className="text-4xl font-bold mb-4">Let the Games Begin.</h2>
+            <h2 className="text-4xl font-bold mb-4">Welcome Back to Inter House Fantasy Games</h2>
+            <p className="text-gray-300">Log in to manage your dream team and track your progress in the league.</p>
             <div className="flex mt-6 space-x-2">
               <div className="w-2 h-2 rounded-full bg-dsfl-primary"></div>
               <div className="w-2 h-2 rounded-full bg-gray-600"></div>

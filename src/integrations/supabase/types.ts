@@ -75,6 +75,9 @@ export type Database = {
           id: string
           name: string | null
           password: string | null
+          captain_id: number | null
+          team_created: boolean
+          last_team_update: string | null
         }
         Insert: {
           budget?: number | null
@@ -85,6 +88,9 @@ export type Database = {
           id: string
           name?: string | null
           password?: string | null
+          captain_id?: number | null
+          team_created?: boolean
+          last_team_update?: string | null
         }
         Update: {
           budget?: number | null
@@ -95,8 +101,19 @@ export type Database = {
           id?: string
           name?: string | null
           password?: string | null
+          captain_id?: number | null
+          team_created?: boolean
+          last_team_update?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "Users_captain_id_fkey"
+            columns: ["captain_id"]
+            isOneToOne: false
+            referencedRelation: "Players"
+            referencedColumns: ["id"]
+          }
+        ]
       }
     }
     Views: {

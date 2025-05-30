@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,8 +6,7 @@ import { supabase } from '@/lib/supabase';
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [userName, setUserName] = useState<string>("");
-  const { user, signOut } = useAuth();
+  const { user, userProfile, signOut } = useAuth();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -26,44 +24,6 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-
-  useEffect(() => {
-    const fetchUserName = async () => {
-      if (user) {
-        try {
-          // First try to get name from Users table
-          const { data, error } = await supabase
-            .from('Users')
-            .select('name')
-            .eq('id', user.id)
-            .maybeSingle();
-
-          if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching user name:', error);
-          }
-
-          if (data?.name) {
-            setUserName(data.name);
-          } else {
-            // Fallback to user metadata if no name in Users table
-            const metaName = user.user_metadata?.name;
-            if (metaName) {
-              setUserName(metaName);
-            } else {
-              setUserName('User');
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user name:', error);
-          // Fallback to user metadata
-          const metaName = user.user_metadata?.name;
-          setUserName(metaName || 'User');
-        }
-      }
-    };
-
-    fetchUserName();
-  }, [user]);
 
   return (
     <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-dsfl-darkblue/90 backdrop-blur-md shadow-lg' : 'bg-transparent'}`}>
@@ -91,7 +51,7 @@ const Navbar = () => {
           {user ? (
             <div className="flex items-center gap-3">
               <span className="text-gray-300 text-sm hidden md:block">
-                Hi, {userName}
+                Hi, {userProfile?.name || 'Player'}
               </span>
               <button 
                 onClick={() => signOut()} 

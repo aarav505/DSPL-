@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 type Position = "GK" | "DEF" | "MID" | "FWD";
@@ -64,20 +63,30 @@ const TeamField = ({ formation, selectedPlayers, captain, onRemovePlayer, onSetC
       </div>
       
       {hoveredPlayer?.id === player?.id && player && (
-        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-10 bg-black/90 text-white p-3 rounded-md text-sm whitespace-nowrap min-w-max">
-          <div className="font-bold">{player.name}</div>
-          <div>Position: {player.position}</div>
-          <div>Team: {player.team}</div>
-          <div>House: {player.house || 'Not specified'}</div>
-          <div>Price: ₹{player.price}</div>
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-10 bg-black/90 text-white p-4 rounded-lg text-sm whitespace-nowrap min-w-max shadow-lg border border-dsfl-primary/20">
+          <div className="font-bold text-lg mb-2">{player.name}</div>
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-dsfl-primary">Position:</span>
+              <span>{player.position}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-dsfl-primary">House:</span>
+              <span>{player.team}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-dsfl-primary">Price:</span>
+              <span>₹{player.price}</span>
+            </div>
+          </div>
           <button 
             onClick={(e) => {
               e.stopPropagation();
               onRemovePlayer(player);
             }}
-            className="mt-2 bg-red-500 px-2 py-1 rounded text-xs hover:bg-red-600 transition-colors"
+            className="mt-3 w-full bg-red-500/90 hover:bg-red-600 px-3 py-1.5 rounded text-xs font-medium transition-colors"
           >
-            Remove
+            Remove Player
           </button>
         </div>
       )}
