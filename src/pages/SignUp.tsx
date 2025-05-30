@@ -57,16 +57,64 @@ const SignUp = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordStrength < 3) {
+
+    // Basic validation
+    if (!name.trim()) {
       toast({
-        title: "Weak password",
-        description: "Please choose a stronger password.",
+        title: "Invalid name",
+        description: "Please enter your name",
         variant: "destructive",
       });
       return;
     }
-    
-    await signUp(email, password, name, house);
+
+    if (!email.trim()) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter your email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!email.endsWith('@doonschool.com')) {
+      toast({
+        title: "Invalid email domain",
+        description: "Please use your Doon School email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!house) {
+      toast({
+        title: "House not selected",
+        description: "Please select your house",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordStrength < 3) {
+      toast({
+        title: "Weak password",
+        description: "Please choose a stronger password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      console.log('Attempting to sign up with:', { name, email, house });
+      await signUp(email, password, name, house);
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      toast({
+        title: "Signup failed",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
@@ -90,14 +138,14 @@ const SignUp = () => {
         <form onSubmit={handleSubmit} className={`flex-1 flex flex-col mt-8 transition-all duration-500 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-400 mb-1">First Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-400 mb-1">Full Name</label>
               <Input
                 id="name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full bg-gray-800 border-gray-700 focus:border-dsfl-primary"
-                placeholder="John"
+                placeholder="John Doe"
                 required
               />
             </div>
@@ -113,6 +161,7 @@ const SignUp = () => {
                 placeholder="student@doonschool.com"
                 required
               />
+              <p className="text-xs text-gray-500 mt-1">Use your Doon School email address</p>
             </div>
             
             <div>
@@ -124,12 +173,12 @@ const SignUp = () => {
                 className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-dsfl-primary"
                 required
               >
-                <option value="" disabled>Select your house</option>
-                <option value="jaipur">Jaipur</option>
-                <option value="kashmir">Kashmir</option>
-                <option value="hyderabad">Hyderabad</option>
-                <option value="tata">Tata</option>
-                <option value="oberoi">Oberoi</option>
+                <option value="">Select your house</option>
+                <option value="Jaipur">Jaipur</option>
+                <option value="Kashmir">Kashmir</option>
+                <option value="Hyderabad">Hyderabad</option>
+                <option value="Tata">Tata</option>
+                <option value="Oberoi">Oberoi</option>
               </select>
             </div>
             
